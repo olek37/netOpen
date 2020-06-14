@@ -1,21 +1,36 @@
 import express from 'express'
-import mongoose from 'mongoose'
+import bodyParser from 'body-parser'
+import cors from 'cors'
 
-const url = 'mongodb://localhost:27017/netOpen'
+import { auth } from './auth'
+
+import * as UserController from './controllers/user'
+import * as TournamentActionsController from './controllers/tournament_actions'
+import * as TournamentController from './controllers/tournament' 
+
+import { PORT } from './constants'
+
+import seed from './seed'
+//seed()
+
 const app = express()
-const port = 3000
 
-mongoose.connect(url, { useNewUrlParser: true, useUnifiedTopology: true })
+app.use(cors())
+app.use(bodyParser.urlencoded({ extended: false }))
+app.use(bodyParser.json())
 
-const db = mongoose.connection
+app.post('/confirmAccount', UserController.confirmAccount)
+app.post('/signUp', UserController.signUp)
+app.post('/signIn', UserController.signIn)
+app.post('/forgotPassword', UserController.forgotPassword)
+app.post('/changePassword', UserController.changePassword)
 
-db.on('error', function(err){
-  console.error("connection error;", err);
-});
-db.once('open', function() {
-  // we're connected!
-});
+app.post('/tournaments/new', auth, TournamentController.create)
+app.post('/tournaments', TournamentController.read)
+app.post('/tournament', TournamentController.readOne)
+app.post('/myOpen', auth, TournamentController.myOpen)
 
-app.get('/', (req, res) => res.send('Hello World!'))
+app.post('/joinTournament', auth, TournamentActionsController.joinTournament)
+app.post('/updateWinner', auth, TournamentActionsController.updateWinner)
 
-app.listen(port, () => console.log(`Example app listening at http://localhost:${port}`))
+app.listen(PORT, () => console.log(`openNet listening at http://localhost:${PORT}`))
